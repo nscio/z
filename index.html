@@ -150,7 +150,6 @@
         text-decoration: underline;
     }
 
-    /* Responsividade */
     @media (max-width: 768px) {
         h1 {
             font-size: 2.5rem;
@@ -198,11 +197,11 @@
         <label for="nivel">Nível de Geminianosidade (máximo):</label>
         <input type="number" id="nivel" value="10" readonly />
 
-        <!-- Opção para selecionar o tipo de câmbio -->
         <label for="currency-option">Escolha o câmbio:</label>
         <select id="currency-option">
             <option value="usd-eth">USD/ETH</option>
             <option value="diamond-sol">Diamond/SOL</option>
+            <option value="btc">BTC</option>
         </select>
 
         <button class="purchase-button" onclick="calcularValorDark()">Calcular Valor Dark Geminiano</button>
@@ -210,7 +209,6 @@
         <button class="meta-button" onclick="connectMetaMask()">Conectar MetaMask</button>
 
         <div id="alert" class="alert"></div>
-        <!-- Exibição do valor calculado -->
         <div id="calculated-value" class="calculated-value"></div>
     </div>
 
@@ -222,7 +220,7 @@
     const PIX_KEY = '48761013889'; 
     let provider;
     let signer;
-    let valorDarkUSD, valorDarkETH, valorDarkEUR, valorDarkSOL;
+    let valorDarkUSD, valorDarkETH, valorDarkEUR, valorDarkSOL, valorDarkBTC;
 
     async function connectMetaMask() {
         if (typeof window.ethereum !== 'undefined') {
@@ -246,7 +244,8 @@
         const EURtoUSD = data.rates.EUR; 
         const ETHtoUSD = await fetchETHPrice();
         const SOLtoUSD = await fetchSOLPrice();
-        return { BRLtoUSD, EURtoUSD, ETHtoUSD, SOLtoUSD };
+        const BTCtoUSD = await fetchBTCPrice();
+        return { BRLtoUSD, EURtoUSD, ETHtoUSD, SOLtoUSD, BTCtoUSD };
     }
 
     async function fetchETHPrice() {
@@ -259,6 +258,12 @@
         const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
         const data = await response.json();
         return data.solana.usd;
+    }
+
+    async function fetchBTCPrice() {
+        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
+        const data = await response.json();
+        return data.bitcoin.usd;
     }
 
     function fibonacciGeminiana(n) {
@@ -281,7 +286,7 @@
             return;
         }
 
-        const { BRLtoUSD, EURtoUSD, ETHtoUSD, SOLtoUSD } = await getExchangeRates();
+        const { BRLtoUSD, EURtoUSD, ETHtoUSD, SOLtoUSD, BTCtoUSD } = await getExchangeRates();
         const amountUSD = (amountBRL / BRLtoUSD).toFixed(2);
 
         const fator = fibonacciGeminiana(nivel);
@@ -292,12 +297,17 @@
             document.getElementById('calculated-value').innerText = 
                 `Valor Calculado: $${valorDarkUSD} USD | ${valorDarkETH} ETH`;
             showAlert(`Valor Dark Geminiano calculado: $${valorDarkUSD} USD | ${valorDarkETH} ETH`, 'success');
-        } else {
+        } else if (currencyOption === 'diamond-sol') {
             valorDarkEUR = (valorDarkUSD * EURtoUSD).toFixed(2);
             valorDarkSOL = (valorDarkUSD * SOLtoUSD).toFixed(2);
             document.getElementById('calculated-value').innerText = 
                 `Valor Calculado: $${valorDarkUSD} USD | €${valorDarkEUR} EUR | ${valorDarkSOL} SOL`;
             showAlert(`Valor Dark Geminiano calculado: $${valorDarkUSD} USD | €${valorDarkEUR} EUR | ${valorDarkSOL} SOL`, 'success');
+        } else {
+            valorDarkBTC = (valorDarkUSD / BTCtoUSD).toFixed(6);
+            document.getElementById('calculated-value').innerText = 
+                `Valor Calculado: $${valorDarkUSD} USD | ₿${valorDarkBTC} BTC`;
+            showAlert(`Valor Dark Geminiano calculado: $${valorDarkUSD} USD | ₿${valorDarkBTC} BTC`, 'success');
         }
     }
 
