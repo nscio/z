@@ -1,8 +1,7 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-   <link rel="icon" href="z.png" type="image/x-icon">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dark Geminiano</title>
     <style>
@@ -130,6 +129,21 @@
         .alert.info {
             background-color: #1a73e8;
         }
+
+        footer {
+            width: 100%;
+            padding: 20px;
+            background-color: #1e1e1e;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #e0e0e0;
+            margin-top: 20px;
+        }
+
+        footer a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
@@ -148,6 +162,7 @@
         <div class="form-group">
             <label for="currency-option">Escolha a conversão:</label>
             <select id="currency-option">
+                <option value="usd-btc">Diamond para Bitcoin (BTC)</option>
                 <option value="diamond-btc">Diamond para BTC</option>
                 <option value="diamond-solana">Diamond para Solana</option>
                 <option value="diamond-eth">Diamond para Ethereum</option>
@@ -164,25 +179,30 @@
         <div id="calculated-value" class="alert info"></div>
         <div id="alert" class="alert success"></div>
     </div>
-    <footer>
-    <p>NSC Project by <a href="https://br.linkedin.com/in/lucasjanuariorbx/" target="_blank">Lucas Januário</a></p>
-</footer>
 
+    <footer>
+        <p>&copy; 2025 Lucas Januário. Todos os direitos reservados. <a href="#">Política de Privacidade</a></p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.0.0/dist/ethers.umd.min.js"></script>
 
     <script>
+        let provider;
+        let signer;
+
+        // Conectar MetaMask
         async function connectMetaMask() {
-            try {
-                if (typeof window.ethereum !== 'undefined') {
-                    await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    showAlert('Conexão com MetaMask bem-sucedida!', 'success');
-                } else {
-                    alert('MetaMask não encontrado. Instale o MetaMask para continuar.');
-                }
-            } catch (error) {
-                showAlert('Erro ao conectar ao MetaMask.', 'info');
+            if (window.ethereum) {
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                await provider.send("eth_requestAccounts", []); // Solicitar contas
+                signer = provider.getSigner();
+                showAlert('Conexão com MetaMask bem-sucedida!', 'success');
+            } else {
+                alert('MetaMask não encontrado. Instale o MetaMask para continuar.');
             }
         }
 
+        // Calcular o valor a ser transferido
         function calcularValorDark() {
             const amount = parseFloat(document.getElementById('amount').value);
             const nivel = parseInt(document.getElementById('nivel').value, 10);
@@ -206,9 +226,11 @@
             }
 
             const darkValue = amount * fibonacciValue * exchangeRate;
-            showAlert(`Valor Dark Calculado: ${darkValue.toFixed(8)}`, 'info');
+            showAlert(`Valor Dark Calculado: ${darkValue.toFixed(8)} ETH`, 'info');
+            transferToMetaMask(darkValue);
         }
 
+        // Função de Fibonacci
         function fibonacciGeminiana(nivel) {
             if (nivel <= 1) return 1;
             let a = 1, b = 1, temp;
@@ -220,10 +242,22 @@
             return b;
         }
 
-        function sacar() {
-            showAlert('Saque realizado com sucesso!', 'success');
+        // Transferir para o MetaMask
+        async function transferToMetaMask(value) {
+            try {
+                const transaction = await signer.sendTransaction({
+                    to: await signer.getAddress(), // Envia para a própria conta conectada
+                    value: ethers.utils.parseEther(value.toString()) // Valor em wei
+                });
+                await transaction.wait();
+                showAlert(`Transação enviada com sucesso! Hash: ${transaction.hash}`, 'success');
+            } catch (error) {
+                console.error(error);
+                showAlert('Erro ao enviar a transação', 'info');
+            }
         }
 
+        // Função para mostrar alertas
         function showAlert(message, type) {
             const alertBox = type === 'success' ? document.getElementById('alert') : document.getElementById('calculated-value');
             alertBox.textContent = message;
@@ -233,6 +267,10 @@
             setTimeout(() => {
                 alertBox.style.display = 'none';
             }, 3000);
+        }
+
+        function sacar() {
+            showAlert('Saque realizado com sucesso!', 'success');
         }
     </script>
 
