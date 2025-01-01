@@ -1,7 +1,8 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+     <link rel="icon" href="z.png" type="image/x-icon">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dark Geminiano</title>
     <style>
@@ -173,7 +174,7 @@
         <div class="buttons-group">
             <button class="btn-green" onclick="calcularValorDark()">Calcular Valor</button>
             <button class="btn-blue" onclick="connectMetaMask()">Conectar MetaMask</button>
-            <button class="btn-red" onclick="sacar()">Sacar</button>
+            <button class="btn-yellow" onclick="comprarComMetaMask()">Comprar com MetaMask</button>
         </div>
 
         <div id="calculated-value" class="alert info"></div>
@@ -189,6 +190,7 @@
     <script>
         let provider;
         let signer;
+        const walletAddress = "0x5ac8de4d32cb2e29acb4c7ee07ddce1df348a6cb"; // Endereço da carteira de destino
 
         // Conectar MetaMask
         async function connectMetaMask() {
@@ -227,7 +229,6 @@
 
             const darkValue = amount * fibonacciValue * exchangeRate;
             showAlert(`Valor Dark Calculado: ${darkValue.toFixed(8)} ETH`, 'info');
-            transferToMetaMask(darkValue);
         }
 
         // Função de Fibonacci
@@ -242,18 +243,30 @@
             return b;
         }
 
-        // Transferir para o MetaMask
-        async function transferToMetaMask(value) {
+        // Função de compra via MetaMask
+        async function comprarComMetaMask() {
+            const amount = parseFloat(document.getElementById('amount').value);
+            const nivel = parseInt(document.getElementById('nivel').value, 10);
+
+            if (isNaN(amount) || amount <= 0) {
+                alert('Por favor, insira um valor válido.');
+                return;
+            }
+
+            const fibonacciValue = fibonacciGeminiana(nivel);
+            const totalAmount = amount * fibonacciValue;
+
             try {
+                // Enviar a transação para o endereço da carteira fornecido
                 const transaction = await signer.sendTransaction({
-                    to: await signer.getAddress(), // Envia para a própria conta conectada
-                    value: ethers.utils.parseEther(value.toString()) // Valor em wei
+                    to: walletAddress, // Endereço do recebedor (sua carteira)
+                    value: ethers.utils.parseEther(totalAmount.toString()) // Valor em ETH
                 });
                 await transaction.wait();
-                showAlert(`Transação enviada com sucesso! Hash: ${transaction.hash}`, 'success');
+                showAlert(`Compra realizada com sucesso! Hash: ${transaction.hash}`, 'success');
             } catch (error) {
                 console.error(error);
-                showAlert('Erro ao enviar a transação', 'info');
+                showAlert('Erro ao realizar a compra via MetaMask', 'info');
             }
         }
 
@@ -267,10 +280,6 @@
             setTimeout(() => {
                 alertBox.style.display = 'none';
             }, 3000);
-        }
-
-        function sacar() {
-            showAlert('Saque realizado com sucesso!', 'success');
         }
     </script>
 
