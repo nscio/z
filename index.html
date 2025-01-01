@@ -10,50 +10,94 @@
             background-color: #121212;
             color: #fff;
             margin: 0;
-            padding: 20px;
+            padding: 0;
         }
         h1 {
             text-align: center;
+            margin: 20px 0;
         }
         .container {
             max-width: 600px;
-            margin: auto;
+            margin: 40px auto;
             background: #1e1e1e;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         .form-group label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            font-weight: bold;
         }
-        .form-group input, .form-group select, .form-group button {
+        .form-group input, .form-group select {
             width: 100%;
             padding: 10px;
             border: none;
             border-radius: 5px;
+            background: #2a2a2a;
+            color: #fff;
             box-sizing: border-box;
         }
-        .form-group button {
-            background-color: #4CAF50;
-            color: #fff;
-            cursor: pointer;
-            font-weight: bold;
+        .form-group input:focus, .form-group select:focus {
+            outline: 2px solid #4CAF50;
         }
-        .form-group button:hover {
-            background-color: #45a049;
+        .buttons-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .buttons-group button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #fff;
+            transition: background-color 0.3s ease;
+        }
+        .btn-blue {
+            background-color: #1a73e8;
+        }
+        .btn-blue:hover {
+            background-color: #155cbc;
+        }
+        .btn-red {
+            background-color: #ea4335;
+        }
+        .btn-red:hover {
+            background-color: #c23628;
+        }
+        .btn-yellow {
+            background-color: #fbbc05;
+            color: #000;
+        }
+        .btn-yellow:hover {
+            background-color: #d9a005;
+        }
+        .btn-green {
+            background-color: #34a853;
+        }
+        .btn-green:hover {
+            background-color: #2a8442;
         }
         .alert {
             display: none;
-            margin-top: 15px;
-            padding: 10px;
+            margin-top: 20px;
+            padding: 15px;
             border-radius: 5px;
             text-align: center;
+            font-weight: bold;
+        }
+        .alert.success {
+            background-color: #34a853;
+        }
+        .alert.info {
             background-color: #1a73e8;
-            color: #fff;
         }
     </style>
 </head>
@@ -78,37 +122,29 @@
                 <option value="diamond-cardano">Diamond para Cardano (ADA)</option>
             </select>
         </div>
-        <div class="form-group">
-            <button onclick="calcularValorDark()">Calcular Valor Dark</button>
+        <div class="buttons-group">
+            <button class="btn-green" onclick="calcularValorDark()">Calcular Valor</button>
+            <button class="btn-blue" onclick="connectMetaMask()">Conectar MetaMask</button>
+            <button class="btn-red" onclick="sacar()">Sacar</button>
         </div>
-        <div class="form-group">
-            <button onclick="connectMetaMask()">Conectar MetaMask</button>
-        </div>
-        <div class="form-group">
-            <button onclick="sacar()">Sacar</button>
-        </div>
-        <div id="calculated-value" class="alert"></div>
-        <div id="alert" class="alert"></div>
+        <div id="calculated-value" class="alert info"></div>
+        <div id="alert" class="alert success"></div>
     </div>
 
     <script>
-        // Função para conectar ao MetaMask
         async function connectMetaMask() {
             try {
                 if (typeof window.ethereum !== 'undefined') {
                     await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    document.getElementById('alert').style.display = 'block';
-                    document.getElementById('alert').innerText = 'Conexão com MetaMask bem-sucedida!';
+                    showAlert('Conexão com MetaMask bem-sucedida!', 'success');
                 } else {
                     alert('MetaMask não encontrado. Instale o MetaMask para continuar.');
                 }
             } catch (error) {
-                document.getElementById('alert').style.display = 'block';
-                document.getElementById('alert').innerText = 'Erro ao conectar ao MetaMask.';
+                showAlert('Erro ao conectar ao MetaMask.', 'info');
             }
         }
 
-        // Função para calcular o valor Dark Geminiano
         function calcularValorDark() {
             const amount = parseFloat(document.getElementById('amount').value);
             const nivel = parseInt(document.getElementById('nivel').value, 10);
@@ -122,34 +158,19 @@
             const fibonacciValue = fibonacciGeminiana(nivel);
             let exchangeRate;
 
-            // Definindo taxas de câmbio simuladas
             switch (currencyOption) {
-                case 'usd-btc':
-                    exchangeRate = 0.000035; // Exemplo: USD para BTC
-                    break;
-                case 'diamond-btc':
-                    exchangeRate = 0.0005; // Exemplo: Diamond para BTC
-                    break;
-                case 'diamond-solana':
-                    exchangeRate = 0.05; // Exemplo: Diamond para Solana
-                    break;
-                case 'diamond-eth':
-                    exchangeRate = 0.003; // Exemplo: Diamond para ETH
-                    break;
-                case 'diamond-cardano':
-                    exchangeRate = 0.07; // Exemplo: Diamond para Cardano
-                    break;
-                default:
-                    exchangeRate = 1; // Valor padrão
+                case 'usd-btc': exchangeRate = 0.000035; break;
+                case 'diamond-btc': exchangeRate = 0.0005; break;
+                case 'diamond-solana': exchangeRate = 0.05; break;
+                case 'diamond-eth': exchangeRate = 0.003; break;
+                case 'diamond-cardano': exchangeRate = 0.07; break;
+                default: exchangeRate = 1;
             }
 
             const darkValue = amount * fibonacciValue * exchangeRate;
-
-            document.getElementById('calculated-value').style.display = 'block';
-            document.getElementById('calculated-value').innerText = `Valor Dark Geminiano Calculado: ${darkValue.toFixed(8)}`;
+            showAlert(`Valor Dark Calculado: ${darkValue.toFixed(8)}`, 'info');
         }
 
-        // Função personalizada de Fibonacci
         function fibonacciGeminiana(nivel) {
             if (nivel <= 1) return 1;
             let a = 1, b = 1, temp;
@@ -161,13 +182,18 @@
             return b;
         }
 
-        // Função simulada de saque
         function sacar() {
-            const alertElement = document.getElementById('alert');
-            alertElement.style.display = 'block';
-            alertElement.innerText = 'Saque realizado com sucesso!';
+            showAlert('Saque realizado com sucesso!', 'success');
+        }
+
+        function showAlert(message, type) {
+            const alertBox = type === 'success' ? document.getElementById('alert') : document.getElementById('calculated-value');
+            alertBox.textContent = message;
+            alertBox.classList.add(type);
+            alertBox.style.display = 'block';
+
             setTimeout(() => {
-                alertElement.style.display = 'none';
+                alertBox.style.display = 'none';
             }, 3000);
         }
     </script>
